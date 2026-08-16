@@ -49,7 +49,7 @@ const updatePost = async (req, res) => {
         }
 
 
-        if (post.user_id.toString() !== req.user.id) {
+        if (post.userId.toString() !== req.user.id) {
             return res.status(403).json({ message: "Unauthorized: You can only edit your own posts!" });
         }
 

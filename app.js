@@ -10,8 +10,13 @@ app.use(express.json());
 import postRouter from "./routes/post.route.js";
 app.use('/api/posts', postRouter);
 
+
 import loginRouter from "./routes/user.route.js";
 app.use('/api/users', loginRouter);
+
+
+import commentRouter from "./routes/comment.route.js";
+app.use('/api/comments', commentRouter);
 
 
 (async () => {
