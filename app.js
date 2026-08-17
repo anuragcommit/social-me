@@ -1,11 +1,13 @@
 import express from "express";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
+app.use(cookieParser());
 
 import postRouter from "./routes/post.route.js";
 app.use('/api/posts', postRouter);

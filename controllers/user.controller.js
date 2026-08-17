@@ -33,7 +33,7 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ email, username });
 
         if (!user) {
-            return res.status(400).json({ message: "User not found" })
+            return res.status(404).json({ message: "User not found" })
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -46,11 +46,20 @@ const loginUser = async (req, res) => {
             { id: user.id },
             "jwt_secret_key_123",
             { expiresIn: "1d" }
-        )
+        );
 
-        return res.status(200).json({
+        const options ={
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict"
+        }
+
+        return res.status(200)
+        .cookie("token", token, options)
+        .json({
             token,
-            message: "Login successfull"
+            message: "Login successfull",
+            user: {id: user._id, username: user.username, email: user.email}
         });
 
     } catch (error) {
@@ -141,4 +150,24 @@ const updateUserPassword = async (req, res) => {
 }
 
 
-export { registerUser, loginUser, deleteUser, updateUserDetails, updateUserPassword }
+const logoutUser = async (req, res) => {
+    try {
+         const options = {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict"
+         }
+
+         return res
+         .status(200)
+         .clearCookie("token", options)
+         .json({message: "User logged out successfully"});
+         
+    } catch (error) {
+        console.error("Unable to logout user", error);
+        res.status(500).json({message: "Error while logging out user"});
+    }
+}
+
+
+export { registerUser, loginUser, deleteUser, updateUserDetails, updateUserPassword, logoutUser }
