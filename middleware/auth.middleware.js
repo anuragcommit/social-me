@@ -4,7 +4,6 @@ import { User } from "../models/user.model.js";
 
 export const jwtVerify = async (req, res, next) => {
     try {
-        console.log("req.body", req.body);
 
         const token = req.cookies.token;
         if (!token) {
@@ -19,7 +18,7 @@ export const jwtVerify = async (req, res, next) => {
         }
 
         if (decodedToken.tokenVersion !== user.tokenVersion) {
-            return res.status(403).json({ message: "Session expired due to logout from another device. Please login again" });
+            return res.status(403).json({ message: "Session expired. Please login again" });
         }
 
 
@@ -27,8 +26,17 @@ export const jwtVerify = async (req, res, next) => {
         next();
 
     } catch (error) {
-        console.error("User cannot be verified", error)
-        res.status(403).json({ error: "expired or invalid token" });
+        console.error("User cannot be verified", error);
+
+        if(error.name === "TokenExpiredError") {
+            return res.status(401).json({ message: "Token expired. Please login again"});
+        }
+
+        if(error.name === "JsonWebTokenError") {
+            return res.status(401).json({ message: "Invalid token"});
+        }
+
+        res.status(500).json({ message: "Authentication server error" });
     }
 
 }

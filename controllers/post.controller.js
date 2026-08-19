@@ -21,7 +21,7 @@ const createPost = async (req, res) => {
         const newPost = await Post.create({
             title,
             description,
-            user_id: userId,
+            userId,
         });
         console.log("post", req.body);
         res.status(201).json({
