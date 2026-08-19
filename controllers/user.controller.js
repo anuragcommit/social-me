@@ -43,14 +43,14 @@ const loginUser = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.id },
+            { id: user.id, tokenVersion: user.tokenVersion },
             "jwt_secret_key_123",
             { expiresIn: "1d" }
         );
 
         const options ={
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: "strict"
         }
 
@@ -59,7 +59,7 @@ const loginUser = async (req, res) => {
         .json({
             token,
             message: "Login successfull",
-            user: {id: user._id, username: user.username, email: user.email}
+            user: {id: user._id, username: user.username, email: user.email, tokenVersion: user.tokenVersion}
         });
 
     } catch (error) {
@@ -154,7 +154,7 @@ const logoutUser = async (req, res) => {
     try {
          const options = {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: "strict"
          }
 
@@ -170,4 +170,32 @@ const logoutUser = async (req, res) => {
 }
 
 
-export { registerUser, loginUser, deleteUser, updateUserDetails, updateUserPassword, logoutUser }
+const logoutFromAllDevice = async (req, res) => {
+    try {
+        
+        const user = await User.findById(req.user.id);
+        if(!user){
+            return res.status(404).json({message: "User not found"});
+        }
+
+        user.tokenVersion += 1;
+        await user.save();
+
+        const options = {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict",
+        }
+        return res
+        .status(200)
+        .clearCookie("token", options)
+        .json({message: "Logged out of all devices successfully"});
+
+    } catch (error) {
+        console.error("Unable to logout from all devices", error);
+        res.status(500).json({message: "Error while logging out from all devices"});
+    }
+}
+
+
+export { registerUser, loginUser, deleteUser, updateUserDetails, updateUserPassword, logoutUser, logoutFromAllDevice }

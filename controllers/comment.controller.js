@@ -101,7 +101,9 @@ const getCommentByPost = async (req, res) => {
         const postId = req.params.postId;
 
         const comments = await Comment.find({postId}).populate("userId", "username email");
+        
         return res.status(200).json({message: "Comments fetched successfully", comments});
+
     } catch (error) {
         console.error("Unable to fetch comments", error);
         return res.status(500).json({message: "Error while fetching comments"});
