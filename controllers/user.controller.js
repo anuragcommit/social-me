@@ -75,8 +75,8 @@ const loginUser = async (req, res) => {
 
         const token = jwt.sign(
             { id: user.id, tokenVersion: user.tokenVersion },
-            "jwt_secret_key_123",
-            { expiresIn: "1d" }
+            "process.env.ACCESS_TOKEN_SECRET",
+            { expiresIn: "ACCESS_TOKEN_EXPIRY" }
         );
 
         const options = {
@@ -97,6 +97,26 @@ const loginUser = async (req, res) => {
     } catch (error) {
         console.error("Login failed", error)
         return res.status(500).json({ message: "Error logging in" })
+    }
+}
+
+
+const logoutUser = async (req, res) => {
+    try {
+        const options = {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict"
+        }
+
+        return res
+            .status(200)
+            .clearCookie("token", options)
+            .json({ message: "User logged out successfully" });
+
+    } catch (error) {
+        console.error("Unable to logout user", error);
+        res.status(500).json({ message: "Error while logging out user" });
     }
 }
 
@@ -215,24 +235,6 @@ const updateUserPassword = async (req, res) => {
 }
 
 
-const logoutUser = async (req, res) => {
-    try {
-        const options = {
-            httpOnly: true,
-            secure: false,
-            sameSite: "strict"
-        }
-
-        return res
-            .status(200)
-            .clearCookie("token", options)
-            .json({ message: "User logged out successfully" });
-
-    } catch (error) {
-        console.error("Unable to logout user", error);
-        res.status(500).json({ message: "Error while logging out user" });
-    }
-}
 
 
 const logoutFromAllDevice = async (req, res) => {

@@ -10,7 +10,7 @@ export const jwtVerify = async (req, res, next) => {
             return res.status(401).json({ message: "Unauthorized request, token not found" })
         }
 
-        const decodedToken = jwt.verify(token, "jwt_secret_key_123");
+        const decodedToken = jwt.verify(token, "ACCESS_TOKEN_SECRET");
 
         const user = await User.findById(decodedToken.id);
         if (!user) {

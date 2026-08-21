@@ -1,10 +1,11 @@
+import 'dotenv/config';
 import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT;
 
 app.use(express.json());
 app.use(cookieParser());
