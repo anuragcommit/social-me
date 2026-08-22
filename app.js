@@ -3,41 +3,48 @@ import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 
+import loginRouter from "./routes/user.route.js";
+import postRouter from "./routes/post.route.js";
+import commentRouter from "./routes/comment.route.js";
+
+import { errorHandler } from './middleware/error.middleware.js';
+
+
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 8000;
 
-app.use(express.json());
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
 
-import postRouter from "./routes/post.route.js";
 app.use('/api/posts', postRouter);
-
-
-import loginRouter from "./routes/user.route.js";
 app.use('/api/users', loginRouter);
-
-
-import commentRouter from "./routes/comment.route.js";
 app.use('/api/comments', commentRouter);
+
+
+app.use(errorHandler);
 
 
 (async () => {
     try {
-        await mongoose.connect("mongodb://127.0.0.1:27017/NewDB")
+        await mongoose.connect(process.env.MONGODB_URI)
         console.log("Database connected successfully")
+
+        app.listen(port, () => {
+            console.log("Server is running on port:", port)
+        })
+
+
     } catch (error) {
-         console.error("MongoDB connection failed", error);
-         process.exit(1);  
+        console.error("MongoDB connection failed", error);
+        process.exit(1);
     }
 })();
 
 
 
 
-app.listen(port, () => {
-    console.log("Server is running on port:", port)
-})
 
 
-export {app}
+export { app }

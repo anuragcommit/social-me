@@ -1,40 +1,66 @@
 import { Post } from "../models/post.model.js";
+import { Comment } from "../models/comment.model.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
-const getPosts = async (req, res) => {
-    try {
-        const posts = await Post.find({})
-        res.status(200).json(posts)
-        console.log("Posts are:", posts)
-    } catch (error) {
-        res.status(500).json({ error: "failed to fetch posts" });
-    }
-}
+const createPost = asyncHandler(async (req, res) => {
 
-
-
-const createPost = async (req, res) => {
-
-    try {
-        const { title, description } = req.body;
-        const userId = req.user.id;
-
-        const newPost = await Post.create({
-            title,
-            description,
-            userId,
-        });
-        console.log("post", req.body);
-        res.status(201).json({
-            message: "Post created successfully",
-            newPost
-        })
-
-    } catch (error) {
-        console.error("something went wrong when creating post", error);
-        res.status(500).json({ error: "Failed to create post" })
+    const { title, description } = req.body;
+    if (!title || !description) {
+        throw new ApiError(400, "Title and description is required");
     }
 
-}
+    const userId = req.user.id;
+
+    const newPost = await Post.create({
+        title,
+        description,
+        userId,
+    });
+
+    console.log("post", req.body);
+    return res
+        .status(201)
+        .json(new ApiResponse(
+            201,
+            newPost,
+            "Post created successfully")
+        )
+});
+
+
+const getAllPosts = asyncHandler(async (req, res) => {
+
+    const posts = await Post.find({})
+        .populate("userId", "username email")
+        .sort({ createdAt: -1});
+
+        console.log("Posts are:", posts)    
+
+        return res
+        .status(200)
+        .json(new ApiResponse(
+            200,
+            posts,
+            "Posts fetched successfully"
+        ));
+});
+
+
+const getPostById = asyncHandler(async (req, res) => {
+    const { postId } = req.params;
+
+    const post = await Post.findById(postId).populate("userId", "username email");
+
+    if (!post) {
+        throw new ApiError(404, "Post not found");
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, post, "Post fetched successfully"));
+});
 
 
 
@@ -73,35 +99,38 @@ const updatePost = async (req, res) => {
 }
 
 
-const deletePost = async (req, res) => {
-    try {
-        const postId = req.params.id;
+const deletePost = asyncHandler(async (req, res) => {
+
+    const postId = req.params.id;
 
         const post = await Post.findById(postId);
         if (!post) {
-            return res.status(404).json({ message: "Post not found!" });
+            throw new ApiError(404, "Post not found" );
         }
 
-        if(post.userId.toString() !== req.user.id){
-            return res.status(403).json({message: "Unauthorize: You are not allowed to delete others post!"})
+        if (post.userId.toString() !== req.user.id.toString()) {
+            throw new ApiError(403, "Unauthorize: You are not allowed to delete others post" )
         }
 
-        const deletedPost = await Post.findByIdAndDelete(postId);
-        return res.status(200).json({message: "Post deleted successfully"});
+        await Comment.deleteMany({ postId });
+        await Post.findByIdAndDelete(postId);
 
-
-    } catch (error) {
-        console.error("Unable to delete Post", error);
-        res.status(500).json({ message: "Unable to delete Post" });
-    }
-}
+        return res
+        .status(200)
+        .json(new ApiResponse(
+            200,
+            null,
+            "Post and associated comments delted successfully"
+        ));
+});
 
 
 
 export {
-    getPosts,
+    getAllPosts,
     createPost,
     updatePost,
-    deletePost
+    deletePost,
+    getPostById,
 
 };
